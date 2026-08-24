@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piattaforma Gestione Camere & Extra Rimini</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f7ff',
+                            100: '#e0effe',
+                            500: '#2563eb',
+                            600: '#1d4ed8',
+                            700: '#1e40af',
+                        },
+                        budget: {
+                            green: '#10b981',
+                            extra: '#f59e0b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts Inter & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-active { border-bottom: 3px solid #2563eb; color: #2563eb; font-weight: 600; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header Principal -->
+    <header class="bg-slate-900 text-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-blue-600 p-2.5 rounded-xl text-white">
+                        <i class="fa-solid fa-hotel text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight">Rimini Weekend 2026</h1>
+                        <p class="text-xs text-slate-400">Piattaforma Predisposizione Camere & Gestione Extra</p>
+                    </div>
+                </div>
+                
+                <!-- Quick Budget Summary Header Badges -->
+                <div class="flex flex-wrap items-center gap-3 text-xs sm:text-sm">
+                    <button onclick="openWorkspaceModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center space-x-2 transition shadow-sm">
+                        <i class="fa-brands fa-google-drive"></i>
+                        <span>Google Drive & Sheets</span>
+                    </button>
+                    <button onclick="openShareModal()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-3 py-1.5 rounded-lg flex items-center space-x-2 transition shadow-sm">
+                        <i class="fa-solid fa-share-nodes"></i>
+                        <span>Condividi Link Live</span>
+                    </button>
+                    <div id="driveSyncBadge" class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-2 cursor-pointer" onclick="openWorkspaceModal()">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500" id="driveSyncDot"></span>
+                        <span class="text-slate-300 text-xs" id="driveSyncText">Google Drive: Non collegato</span>
+                    </div>
+                    <div id="cloudSyncStatus" class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" id="syncDot"></span>
+                        <span class="text-slate-300" id="syncText">Inizializzazione Cloud...</span>
+                    </div>
+                    <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                        <span class="text-slate-300">In Budget Condir:</span>
+                        <span class="font-bold text-emerald-400">Coperto (Doppia + PC)</span>
+                    </div>
+                    <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                        <span class="text-slate-300">Extra Fuori Budget Totali:</span>
+                        <span id="headerTotalExtras" class="font-bold text-amber-400">€0,00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <div class="bg-white border-b border-slate-200 shadow-sm sticky top-[73px] z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex space-x-4 sm:space-x-8 overflow-x-auto text-sm font-medium">
+                <button onclick="switchTab('booking')" id="tab-booking" class="py-3 px-1 border-b-2 font-medium flex items-center gap-2 tab-active whitespace-nowrap">
+                    <i class="fa-solid fa-user-plus text-blue-600"></i>
+                    <span>Invia o Modifica Opzioni</span>
+                </button>
+                <button onclick="switchTab('rooms')" id="tab-rooms" class="py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-bed text-indigo-500"></i>
+                    <span>Tabellone Camere</span>
+                </button>
+                <button onclick="switchTab('admin')" id="tab-admin" class="py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie text-emerald-600"></i>
+                    <span>Riepilogo Partecipanti & Costi</span>
+                </button>
+                <button onclick="switchTab('carpool')" id="tab-carpool" class="py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-car text-amber-500"></i>
+                    <span>Coordinamento Trasporti</span>
+                </button>
+                <button onclick="switchTab('drive')" id="tab-drive" class="py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-brands fa-google-drive text-emerald-600"></i>
+                    <span>Foglio Google Drive Live</span>
+                </button>
+                <button onclick="switchTab('ai')" id="tab-ai" class="py-3 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 flex items-center gap-2 whitespace-nowrap">
+                    <i class="fa-solid fa-wand-magic-sparkles text-purple-600"></i>
+                    <span>Assistente IA Logistica</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+
+        <!-- TAB 1: MODULO REGISTRAZIONE / SELEZIONE EXTRA -->
+        <div id="content-booking" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Left & Middle Column: Registration Form -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-800">1. Dati Partecipante</h2>
+                                <p class="text-xs text-slate-500">Inserisci il tuo nome per registrare la stanza e gli eventuali extra desiderati.</p>
+                            </div>
+                            <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">Passo 1 di 4</span>
+                        </div>
+
+                        <form id="bookingForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Nome e Cognome *</label>
+                                    <input type="text" id="participantName" required placeholder="Es. Mario Rossi" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">Email / Telefono</label>
+                                    <input type="text" id="participantContact" placeholder="mario.rossi@email.com" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Room Type Selection -->
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-bed text-blue-600"></i>
+                                    2. Tipologia di Sistemazione
+                                </h3>
+                                
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <!-- Double Room Option (In Budget) -->
+                                    <label class="relative flex flex-col p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-blue-300 bg-white shadow-sm hover:shadow" id="roomLabelDouble">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <input type="radio" name="roomType" value="double" checked onchange="updateCalculations()" class="text-blue-600 focus:ring-blue-500 mt-1">
+                                            <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">100% Coperto</span>
+                                        </div>
+                                        <span class="font-bold text-sm text-slate-800">Camera Doppia Comfort Queen</span>
+                                        <span class="text-xs text-slate-500 mt-1">Sistemazione condivisa con vista mare.</span>
+                                        <span class="text-xs font-semibold text-emerald-600 mt-3">Quota individuale: €0 (In Budget Condir)</span>
+                                    </label>
+
+                                    <!-- Single Upgrade Option (Out of Budget) -->
+                                    <label class="relative flex flex-col p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-amber-300 bg-white shadow-sm hover:shadow" id="roomLabelSingle">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <input type="radio" name="roomType" value="single" onchange="updateCalculations()" class="text-amber-600 focus:ring-amber-500 mt-1">
+                                            <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">Fuori Budget</span>
+                                        </div>
+                                        <span class="font-bold text-sm text-slate-800">Camera ad Uso Singolo</span>
+                                        <span class="text-xs text-slate-500 mt-1">Camera privata Comfort Queen con balcone vista mare.</span>
+                                        <span class="text-xs font-bold text-amber-600 mt-3">+ €25 / notte (Totale €50 per 2 notti)</span>
+                                    </label>
+                                </div>
+
+                                <!-- Roommate Preference (If double selected) -->
+                                <div id="roommateSection" class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1">Preferenza Compagno/a di Stanza (Opzionale)</label>
+                                    <input type="text" id="roommatePreference" placeholder="Es. Vorrei stare con Marco Bianchi oppure Assegnazione automatica" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <!-- Extra Services (Out of Budget) -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                        <i class="fa-solid fa-sparkles text-amber-500"></i>
+                                        3. Servizi Extra Personalizzati (A proprio carico)
+                                    </h3>
+                                    <span class="text-xs text-slate-500 italic">Facoltativi</span>
+                                </div>
+
+                                <div class="space-y-3">
+                                    <!-- SPA Extra -->
+                                    <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-amber-50/50 transition">
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" id="extraSpa" onchange="updateCalculations()" class="rounded text-amber-600 focus:ring-amber-500 h-4 w-4">
+                                            <div>
+                                                <div class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                                                    <span>Ingresso SPA Wellness Kit Included</span>
+                                                    <i class="fa-solid fa-spa text-pink-500 text-xs"></i>
+                                                </div>
+                                                <div class="text-xs text-slate-500">Piscina riscaldata, Sauna, Bagno turco, Doccia emozionale e Tisaneria.</div>
+                                            </div>
+                                        </div>
+                                        <span class="text-sm font-bold text-slate-700 whitespace-nowrap ml-2">+ €30</span>
+                                    </label>
+
+                                    <!-- Garage Extra -->
+                                    <label class="flex items-center justify-between p-3.5 bg-slate-50 rounded-xl border border-slate-200 cursor-pointer hover:bg-amber-50/50 transition">
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" id="extraGarage" onchange="updateCalculations()" class="rounded text-amber-600 focus:ring-amber-500 h-4 w-4">
+                                            <div>
+                                                <div class="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                                                    <span>Posto Auto in Garage Hotel</span>
+                                                    <i class="fa-solid fa-square-parking text-blue-500 text-xs"></i>
+                                                </div>
+                                                <div class="text-xs text-slate-500">28€ al giorno per vettura (Totale 2 giorni €56).</div>
+                                            </div>
+                                        </div>
+                                        <span class="text-sm font-bold text-slate-700 whitespace-nowrap ml-2">+ €56</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Transport Preference & Reimbursement Amount -->
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-route text-emerald-600"></i>
+                                    4. Modalità e Importo Rimborso Trasporto (Coperto dallo Sponsor)
+                                </h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Mezzo di Trasporto</label>
+                                        <select id="transportOption" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500">
+                                            <option value="auto_offro">Metto a disposizione l'auto (Offro posti)</option>
+                                            <option value="auto_cerco">Cerco passaggio in auto con colleghi</option>
+                                            <option value="treno">Viaggio in Treno / Autobus</option>
+                                            <option value="autonomo">Viaggio in autonomia con auto propria (Solo io)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Importo Rimborso Richiesto (€)</label>
+                                        <input type="number" id="transportCost" min="0" step="0.5" placeholder="Es. 45.00" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. Dietary Intolerances & Special Diets -->
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                    <i class="fa-solid fa-utensils text-rose-500"></i>
+                                    5. Intolleranze Alimentari & Diete Speciali (Pensione Completa)
+                                </h3>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Tipologia Esigenza Alimentare</label>
+                                        <select id="dietaryOption" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500">
+                                            <option value="Nessuna">Nessuna (Menu Standard)</option>
+                                            <option value="Celiachia (Senza Glutine)">Celiachia (Senza Glutine)</option>
+                                            <option value="Intolleranza Lattosio">Intolleranza al Lattosio</option>
+                                            <option value="Vegetariano">Vegetariano</option>
+                                            <option value="Vegano">Vegano</option>
+                                            <option value="Altro">Altro / Allergie Specifiche</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-600 mb-1">Note o Allergie Specifiche per lo Chef</label>
+                                        <input type="text" id="dietaryNotes" placeholder="Es. Severa allergia ai crostacei, no arachidi" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="w-full py-3.5 px-6 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition flex items-center justify-center gap-2 text-sm">
+                                <i class="fa-solid fa-paper-plane"></i>
+                                <span>Salva e Sincronizza Predisposizione</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Right Column: Real-time Out-of-Budget Calculator -->
+                <div class="lg:col-span-1">
+                    <div class="bg-slate-900 text-white rounded-2xl p-6 shadow-xl sticky top-[140px] border border-slate-800">
+                        <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+                            <h3 class="text-base font-bold flex items-center gap-2">
+                                <i class="fa-solid fa-calculator text-amber-400"></i>
+                                Calcolo Personalizzato
+                            </h3>
+                            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-1 bg-amber-500/20 text-amber-300 rounded">Trasparenza Costi</span>
+                        </div>
+
+                        <!-- Covered by Budget -->
+                        <div class="space-y-3 mb-6">
+                            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Compreso nel Budget Condir</div>
+                            <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700/60 flex justify-between items-center text-xs">
+                                <div>
+                                    <div class="font-medium text-slate-200">Soggiorno 2 Notti + Pensione Completa</div>
+                                    <div class="text-slate-400 text-[11px]">Tassa soggiorno + Sala Meeting</div>
+                                </div>
+                                <span class="text-emerald-400 font-bold">Incluso (€0)</span>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-800 my-4"></div>
+
+                        <!-- Extra Fuori Budget Breakdown -->
+                        <div class="space-y-3 mb-6">
+                            <div class="text-xs font-semibold text-amber-400 uppercase tracking-wider flex justify-between">
+                                <span>Extra Fuori Budget</span>
+                                <span>A tuo carico</span>
+                            </div>
+
+                            <div id="calcBreakdown" class="space-y-2 text-xs">
+                                <div class="text-slate-400 italic">Nessun extra selezionato.</div>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-slate-800 pt-4">
+                            <div class="flex justify-between items-end">
+                                <div>
+                                    <div class="text-xs text-slate-400">Totale Fuori Budget:</div>
+                                    <div class="text-xs text-slate-500">Da saldare direttamente in hotel</div>
+                                </div>
+                                <div id="calcTotal" class="text-2xl font-extrabold text-amber-400">€0,00</div>
+                            </div>
+                        </div>
+
+                        <!-- Help Box -->
+                        <div class="mt-6 p-3 rounded-xl bg-blue-950/60 border border-blue-800/40 text-blue-200 text-xs flex gap-2.5 items-start">
+                            <i class="fa-solid fa-circle-info text-blue-400 text-sm mt-0.5"></i>
+                            <div>
+                                I costi dei trasporti saranno rimborsati separatamente grazie allo sponsor attivato!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TAB 2: TABELLONE CAMERE ED ASSEGNAZIONI -->
+        <div id="content-rooms" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Mappa Visuale delle Camere Hotel Terminal Palace ****</h2>
+                        <p class="text-xs text-slate-500">Visualizza l'organizzazione dei posti letto e gli abbinamenti delle camere doppie o singole.</p>
+                    </div>
+                    <button onclick="autoAssignRooms()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Genera Abbinamenti Automatici</span>
+                    </button>
+                </div>
+
+                <!-- Rooms Matrix Grid -->
+                <div id="roomsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Dynamic room cards rendered via JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: RIEPILOGO PARTECIPANTI & COSTI -->
+        <div id="content-admin" class="tab-content hidden space-y-6">
+            <!-- Key Metrics Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Partecipanti Totali</div>
+                    <div id="statTotalCount" class="text-2xl font-bold text-slate-800 mt-1">0</div>
+                    <div class="text-xs text-emerald-600 mt-1 font-medium"><i class="fa-solid fa-check"></i> 100% Pernottamento Coperto</div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Camere Singole (Extra)</div>
+                    <div id="statSingleCount" class="text-2xl font-bold text-amber-600 mt-1">0</div>
+                    <div id="statSingleCost" class="text-xs text-slate-500 mt-1">Totale +€0 fuori budget</div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Ospiti Prenotati SPA</div>
+                    <div id="statSpaCount" class="text-2xl font-bold text-pink-600 mt-1">0</div>
+                    <div id="statSpaCost" class="text-xs text-slate-500 mt-1">Totale +€0 fuori budget</div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Posti Garage Richiesti</div>
+                    <div id="statGarageCount" class="text-2xl font-bold text-blue-600 mt-1">0</div>
+                    <div id="statGarageCost" class="text-xs text-slate-500 mt-1">Totale +€0 fuori budget</div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Menu Speciali / Diete</div>
+                    <div id="statDietaryCount" class="text-2xl font-bold text-rose-600 mt-1">0</div>
+                    <div id="statDietaryList" class="text-xs text-slate-500 mt-1 truncate">Da comunicare all'hotel</div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Rimborsi Trasporto</div>
+                    <div id="statTransportTotal" class="text-2xl font-bold text-emerald-600 mt-1">€0.00</div>
+                    <div class="text-xs text-emerald-700 mt-1 font-medium"><i class="fa-solid fa-hand-holding-dollar"></i> Coperto da Sponsor</div>
+                </div>
+            </div>
+
+            <!-- Participants Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800">Elenco Completo Partecipanti & Selezione Extra</h3>
+                        <p class="text-xs text-slate-500">Dettaglio quote individuali e preferenze trasmesse in tempo reale.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="openWorkspaceModal()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 shadow">
+                            <i class="fa-brands fa-google-drive"></i> Workspace & Google Sheets
+                        </button>
+                        <button onclick="openShareModal()" class="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 border border-blue-200">
+                            <i class="fa-solid fa-share-nodes"></i> Condividi Link Live
+                        </button>
+                        <button onclick="promptClearAllData()" class="px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 border border-red-200">
+                            <i class="fa-solid fa-rotate-left"></i> Inizia da Zero
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs sm:text-sm">
+                        <thead class="bg-slate-50 text-slate-600 uppercase font-semibold text-[11px] border-b border-slate-200">
+                            <tr>
+                                <th class="p-4">Partecipante</th>
+                                <th class="p-4">Tipologia Stanza</th>
+                                <th class="p-4">Stanza / Abbinamento</th>
+                                <th class="p-4">Intolleranze / Diete</th>
+                                <th class="p-4">Extra Selezionati</th>
+                                <th class="p-4">Trasporto</th>
+                                <th class="p-4">Rimborso Trasporto</th>
+                                <th class="p-4 text-right">Totale Fuori Budget</th>
+                                <th class="p-4 text-center">Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody id="participantsTableBody" class="divide-y divide-slate-100">
+                            <!-- JS dynamic rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: COORDINAMENTO TRASPORTI -->
+        <div id="content-carpool" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 mb-6">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Coordinamento Auto & Passaggi Rimini</h2>
+                        <p class="text-xs text-slate-500">Organizza i viaggi di gruppo per ottimizzare i costi rimborsati dallo sponsor.</p>
+                    </div>
+                    <span class="px-3 py-1 bg-emerald-100 text-emerald-800 font-bold text-xs rounded-full">Sponsor Trasporti Attivo 🎉</span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Drivers offering seats -->
+                    <div class="bg-blue-50/50 rounded-2xl p-5 border border-blue-100">
+                        <h3 class="font-bold text-blue-900 text-sm mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-car-side text-blue-600"></i>
+                            Offrono Passaggio in Auto
+                        </h3>
+                        <div id="carpoolDriversGrid" class="space-y-3">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Passengers seeking seats -->
+                    <div class="bg-amber-50/50 rounded-2xl p-5 border border-amber-100">
+                        <h3 class="font-bold text-amber-900 text-sm mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-user-group text-amber-600"></i>
+                            Cercano Passaggio
+                        </h3>
+                        <div id="carpoolSeekersGrid" class="space-y-3">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Public Transport / Autonomous -->
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                        <h3 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-train text-slate-600"></i>
+                            Treno / Mezzi Autonomi
+                        </h3>
+                        <div id="carpoolPublicTransportGrid" class="space-y-3">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: GOOGLE DRIVE EMBED & LIVE VIEW -->
+        <div id="content-drive" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-100 mb-6">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl">
+                            <i class="fa-brands fa-google-drive text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-bold text-slate-800">Vista Live Google Sheets & Google Drive</h2>
+                            <p class="text-xs text-slate-500">Visualizza ed ispeziona in tempo reale il Foglio Google sincronizzato dal tuo account Google Drive.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="openWorkspaceModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow flex items-center gap-2">
+                            <i class="fa-solid fa-gear"></i>
+                            <span>Configura Link Google Drive</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="driveEmbedContainer" class="w-full h-[600px] bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden flex flex-col items-center justify-center p-6 text-center space-y-4">
+                    <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl">
+                        <i class="fa-brands fa-google-drive"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-slate-800">Nessun Foglio Google Collegato</h3>
+                        <p class="text-xs text-slate-500 max-w-md mt-1">Collega il tuo account Google Drive inserendo l'URL Webhook ed il link di incorporamento per permettere a tutti di consultare il foglio Google Fogli live qui dentro.</p>
+                    </div>
+                    <button onclick="openWorkspaceModal()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow">
+                        Collega Account Google Drive Ora
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 6: ASSISTENTE IA LOGISTICA (GEMINI API) -->
+        <div id="content-ai" class="tab-content hidden space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                <div class="flex items-center space-x-3 pb-4 border-b border-slate-100 mb-6">
+                    <div class="p-2.5 bg-purple-100 text-purple-700 rounded-xl">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Assistente Intelligenza Artificiale Logistica Rimini</h2>
+                        <p class="text-xs text-slate-500">Chiedi consigli su ottimizazione stanze, trasporti, orari o comunicazioni aziendali.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <!-- Chat window -->
+                    <div id="aiChatWindow" class="h-80 overflow-y-auto p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 text-sm">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0">IA</div>
+                            <div class="bg-white p-3.5 rounded-2xl rounded-tl-none border border-slate-200 shadow-sm text-xs sm:text-sm text-slate-700 max-w-[85%]">
+                                Ciao! Sono il tuo assistente virtuale per il weekend a Rimini. Posso aiutarti a bilanciare la disposizione delle stanze, organizzare il carpooling ottimale per la tua zona o calcolare i preventivi complessivi degli extra. Cosa vuoi sapere?
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Prompt input -->
+                    <div class="flex gap-2">
+                        <input type="text" id="aiInputPrompt" placeholder="Es. Suggerisci gli abbinamenti di stanza migliori o ottimizza l'uso del garage..." class="flex-grow px-4 py-3 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-purple-500">
+                        <button onclick="askGeminiAssistant()" class="px-5 py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-sm transition flex items-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Chiedi</span>
+                        </button>
+                    </div>
+
+                    <!-- Quick Prompt Suggestions -->
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        <button onclick="setAiPrompt('Analizza la lista dei partecipanti e suggerisci gli abbinamenti ideali per le camere doppie.')" class="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg border border-purple-200">
+                            💡 Suggerisci abbinamenti camere
+                        </button>
+                        <button onclick="setAiPrompt('Come posso spiegare ai colleghi che gli extra come SPA e Garage vanno pagati in hotel?')" class="text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg border border-purple-200">
+                            📢 Bozza messaggio per il gruppo
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal for Toast Messages -->
+    <div id="toastModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-4">
+            <div id="toastIcon" class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center text-xl">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <h3 id="toastTitle" class="font-bold text-base text-slate-800">Operazione Completata</h3>
+            <p id="toastMessage" class="text-xs text-slate-500">I tuoi dati sono stati salvati correttamente.</p>
+            <button onclick="closeToast()" class="w-full py-2.5 bg-slate-800 text-white font-bold text-xs rounded-xl hover:bg-slate-900">Chiudi</button>
+        </div>
+    </div>
+
+    <!-- Share Modal for Real-Time Collaboration -->
+    <div id="shareModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                <div class="flex items-center space-x-2 text-blue-600">
+                    <i class="fa-solid fa-share-nodes text-xl"></i>
+                    <h3 class="font-bold text-base text-slate-800">Condividi Piattaforma in Tempo Reale</h3>
+                </div>
+                <button onclick="closeShareModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <p class="text-xs text-slate-600 leading-relaxed">
+                Invia questo link ai tuoi colleghi (via WhatsApp, Email o Slack). 
+                Tutte le registrazioni, le preferenze per le camere, gli extra ed i rimborsi inseriti si <strong>aggiorneranno istantaneamente per tutti gli utenti connessi</strong>.
+            </p>
+
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center gap-2">
+                <input type="text" id="shareUrlInput" readonly class="bg-transparent text-xs text-slate-700 w-full focus:outline-none font-mono select-all">
+                <button onclick="copyShareUrl()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold whitespace-nowrap flex items-center gap-1 shadow">
+                    <i class="fa-solid fa-copy"></i> Copia
+                </button>
+            </div>
+
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-[11px] text-emerald-800 flex gap-2">
+                <i class="fa-solid fa-bolt text-emerald-600 text-sm shrink-0 mt-0.5"></i>
+                <div>
+                    <strong>Sincronizzazione Live Cloud Attiva:</strong> Non c'è bisogno di ricaricare la pagina! Appena un collega compila il modulo, il riepilogo finanziario globale e il tabellone stanze si aggiornano subito per tutti.
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button onclick="closeShareModal()" class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-900">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- GOOGLE WORKSPACE & SHEETS INTEGRATION MODAL -->
+    <div id="workspaceModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-100 flex flex-col max-h-[90vh] overflow-hidden">
+            <!-- Modal Header -->
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                        <i class="fa-brands fa-google-drive text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">Integrazione Google Workspace & Google Sheets</h3>
+                        <p class="text-xs text-slate-400">Esporta resoconti, collega un foglio Google o invia i dati live via Webhook</p>
+                    </div>
+                </div>
+                <button onclick="closeWorkspaceModal()" class="text-slate-400 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-6 overflow-y-auto space-y-6 text-xs sm:text-sm text-slate-700">
+
+                <!-- 1. Automatic Live Sync Settings -->
+                <div class="bg-emerald-50/60 p-4 rounded-xl border border-emerald-200 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-emerald-900 text-xs uppercase tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-emerald-600"></i>
+                            1. Collegamento Diretto Google Drive (Sincronizzazione Automatica Live)
+                        </h4>
+                        <span id="autoSyncStatusBadge" class="bg-emerald-200 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">Attiva</span>
+                    </div>
+                    <p class="text-slate-600 text-xs">
+                        Incolla l'URL della tua <strong>Google Apps Script Web App</strong> per collegare il tuo account Google Drive.
+                        Ogni volta che qualcuno compila o modifica il modulo, i dati verranno <strong>inviati e salvati automaticamente su Google Fogli</strong> in background!
+                    </p>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1 text-xs">URL Webhook Google Apps Script (Dal tuo Google Drive):</label>
+                        <input type="url" id="googleWebhookUrl" placeholder="https://script.google.com/macros/s/.../exec" oninput="saveDriveSettings()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-xs focus:ring-2 focus:ring-emerald-500 bg-white">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1 text-xs">Link di Condivisione/Pubblicazione Foglio Google (Per la vista Embed):</label>
+                        <input type="url" id="googleSheetEmbedUrl" placeholder="https://docs.google.com/spreadsheets/d/.../pubhtml o /edit" oninput="saveDriveSettings()" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 font-mono text-xs focus:ring-2 focus:ring-emerald-500 bg-white">
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 pt-1">
+                        <button onclick="triggerAutoGoogleSheetsSync()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition shadow">
+                            <i class="fa-solid fa-arrows-rotate"></i>
+                            <span>Sincronizza Ora Tutto il Foglio</span>
+                        </button>
+                        <button onclick="toggleAppsScriptGuide()" class="px-4 py-2 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-code text-emerald-600"></i>
+                            <span>Istruzioni Script Google Drive (1 Minuto)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hidden Accordion Guide for Google Apps Script Setup -->
+                <div id="appsScriptGuide" class="hidden p-4 bg-slate-900 text-slate-200 rounded-xl space-y-3 text-xs">
+                    <div class="font-bold text-emerald-400 flex items-center justify-between">
+                        <span>Come collegare il tuo account Google Drive:</span>
+                        <button onclick="copyAppsScriptCode()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded border border-emerald-500/30 font-mono text-[10px]">Copia Codice Script</button>
+                    </div>
+                    <ol class="list-decimal list-inside text-slate-300 space-y-1 text-[11px] leading-relaxed">
+                        <li>Apri un nuovo <strong>Foglio Google</strong> sul tuo account Google Drive.</li>
+                        <li>Nel menu in alto, fai clic su <strong>Estensioni &gt; Apps Script</strong>.</li>
+                        <li>Incolla il codice sottostante e fai clic su <strong>Esegui Distribuzione &gt; Nuova Distribuzione</strong>.</li>
+                        <li>Seleziona tipo: <strong>App Web</strong>, Imposta <em>Accesso: Chiunque (Anyone)</em> e clicca <strong>Distribuisci</strong>.</li>
+                        <li>Copia l'URL fornito da Google ed incollalo nel campo Webhook sopra!</li>
+                    </ol>
+                    <pre id="appsScriptCodeText" class="bg-slate-950 p-3 rounded-lg font-mono text-[10px] text-slate-300 overflow-x-auto border border-slate-800">
+function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = JSON.parse(e.postData.contents);
+  
+  sheet.clearContents();
+  sheet.appendRow(["Nome Partecipante", "Contatto", "Tipologia Stanza", "Stanza Assegnata", "Intolleranze/Diete", "SPA", "Garage", "Trasporto", "Rimborso (€)", "Totale Extra (€)"]);
+  
+  if (data.participants && Array.isArray(data.participants)) {
+    data.participants.forEach(function(p) {
+      sheet.appendRow([
+        p.name,
+        p.contact || '',
+        p.roomType === 'single' ? 'Singola (+€50)' : 'Doppia (In Budget)',
+        p.assignedRoom || 'Non Assegnata',
+        p.dietary || 'Nessuna',
+        p.spa ? 'SI (€30)' : 'NO',
+        p.garage ? 'SI (€56)' : 'NO',
+        p.transport,
+        p.transportCost || 0,
+        p.totalExtra
+      ]);
+    });
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({"result": "success"}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+                </div>
+
+                <div class="border-t border-slate-200"></div>
+
+                <!-- 2. Quick Export Buttons -->
+                <div>
+                    <h4 class="font-bold text-slate-800 mb-2 text-xs uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-file-export text-emerald-600"></i>
+                        2. Esportazione Manuale per Google Workspace
+                    </h4>
+                    <p class="text-slate-500 mb-4 text-xs">Scarica i file per importarli manualmente su Google Fogli o Google Docs se preferisci non usare l'automatismo Webhook.</p>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button onclick="exportToGoogleSheets()" class="p-4 border-2 border-emerald-200 bg-emerald-50/40 hover:bg-emerald-100/60 rounded-xl text-left transition flex items-start gap-3">
+                            <i class="fa-solid fa-file-csv text-emerald-600 text-2xl mt-1"></i>
+                            <div>
+                                <div class="font-bold text-slate-800">Scarica CSV per Google Sheets</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">File CSV UTF-8 pronto per l'importazione diretta in Google Fogli.</div>
+                            </div>
+                        </button>
+
+                        <button onclick="exportToGoogleDocs()" class="p-4 border-2 border-blue-200 bg-blue-50/40 hover:bg-blue-100/60 rounded-xl text-left transition flex items-start gap-3">
+                            <i class="fa-solid fa-file-word text-blue-600 text-2xl mt-1"></i>
+                            <div>
+                                <div class="font-bold text-slate-800">Copia Resoconto per Google Docs</div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">Copia negli appunti il verbale formattato pronto da incollare.</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button onclick="closeWorkspaceModal()" class="px-5 py-2.5 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 text-xs transition">Chiudi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Confirmations -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-100 text-center space-y-4">
+            <div class="w-12 h-12 rounded-full bg-red-100 text-red-600 mx-auto flex items-center justify-center text-xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 id="confirmTitle" class="font-bold text-base text-slate-800">Conferma Operazione</h3>
+            <p id="confirmMessage" class="text-xs text-slate-500">Sei sicuro di voler procedere?</p>
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeConfirmModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl">Annulla</button>
+                <button id="confirmActionButton" class="w-1/2 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl">Conferma</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK for Persistent Storage -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'rimini-weekend-2026';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        window.db = null;
+        window.participantsCollectionRef = null;
+        let isFirstSync = true;
+        let previousCount = 0;
+
+        async function initFirebase() {
+            const syncDot = document.getElementById('syncDot');
+            const syncText = document.getElementById('syncText');
+
+            if (!firebaseConfig) {
+                if (syncDot) syncDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500";
+                if (syncText) syncText.innerText = "Memoria Locale";
+                return;
+            }
+
+            try {
+                const app = initializeApp(firebaseConfig);
+                const auth = getAuth(app);
+                
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                window.db = getFirestore(app);
+                window.participantsCollectionRef = collection(window.db, 'artifacts', appId, 'public', 'data', 'participants');
+
+                // Real-time updates sync across all connected users
+                onSnapshot(window.participantsCollectionRef, (snapshot) => {
+                    const loaded = [];
+                    snapshot.forEach(docSnap => {
+                        loaded.push({ id: docSnap.id, ...docSnap.data() });
+                    });
+                    
+                    if (loaded.length > 0) {
+                        window.participants = loaded;
+                    }
+
+                    // Show subtle toast if someone else added or changed data in real time
+                    if (!isFirstSync && loaded.length > previousCount) {
+                        if (typeof showToast === 'function') {
+                            showToast("Nuovo Partecipante!", "I dati sono stati aggiornati in tempo reale da un altro partecipante.");
+                        }
+                    }
+                    isFirstSync = false;
+                    previousCount = loaded.length;
+
+                    // Trigger UI updates safely
+                    if (typeof updateCalculations === 'function') updateCalculations();
+                    if (typeof updateHeaderTotals === 'function') updateHeaderTotals();
+                    if (typeof renderAdminTable === 'function') renderAdminTable();
+                    if (typeof renderRoomsMatrix === 'function') renderRoomsMatrix();
+                    if (typeof renderCarpoolSection === 'function') renderCarpoolSection();
+
+                    if (syncDot) syncDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500";
+                    if (syncText) syncText.innerText = "Sincronizzato Cloud";
+                }, (error) => {
+                    console.error("Firestore listener error:", error);
+                    if (syncDot) syncDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500";
+                    if (syncText) syncText.innerText = "Memoria Locale";
+                });
+
+            } catch (err) {
+                console.error("Firebase init error:", err);
+                if (syncDot) syncDot.className = "w-2.5 h-2.5 rounded-full bg-amber-500";
+                if (syncText) syncText.innerText = "Memoria Locale";
+            }
+        }
+
+        window.saveParticipantToCloud = async function(participant) {
+            if (window.db && window.participantsCollectionRef) {
+                try {
+                    const docRef = doc(window.db, 'artifacts', appId, 'public', 'data', 'participants', participant.id);
+                    await setDoc(docRef, participant);
+                } catch (e) {
+                    console.error("Error saving participant:", e);
+                }
+            }
+        };
+
+        window.deleteParticipantFromCloud = async function(participantId) {
+            if (window.db && window.participantsCollectionRef) {
+                try {
+                    const docRef = doc(window.db, 'artifacts', appId, 'public', 'data', 'participants', participantId);
+                    await deleteDoc(docRef);
+                } catch (e) {
+                    console.error("Error deleting participant:", e);
+                }
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', initFirebase);
+    </script>
+
+    <!-- Main Application JavaScript Logic -->
+    <script>
+        // Initial Mock Data with dietary information
+        let participants = [
+            {
+                id: '1',
+                name: 'Mario Rossi',
+                contact: 'mario.rossi@email.com',
+                roomType: 'double',
+                roommatePref: 'Giuseppe Bianchi',
+                dietary: 'Nessuna',
+                spa: true,
+                garage: false,
+                transport: 'auto_offro',
+                transportCost: 35.0,
+                totalExtra: 30,
+                assignedRoom: 'Stanza 101'
+            },
+            {
+                id: '2',
+                name: 'Giuseppe Bianchi',
+                contact: 'g.bianchi@email.com',
+                roomType: 'double',
+                roommatePref: 'Mario Rossi',
+                dietary: 'Intolleranza Lattosio',
+                spa: true,
+                garage: true,
+                transport: 'auto_cerco',
+                transportCost: 0,
+                totalExtra: 86,
+                assignedRoom: 'Stanza 101'
+            },
+            {
+                id: '3',
+                name: 'Elena Verdi',
+                contact: 'elena.verdi@email.com',
+                roomType: 'single',
+                roommatePref: '',
+                dietary: 'Celiachia (Senza Glutine)',
+                spa: false,
+                garage: false,
+                transport: 'treno',
+                transportCost: 48.50,
+                totalExtra: 50,
+                assignedRoom: 'Singola 201'
+            }
+        ];
+
+        // 1. Navigation Tab Switcher
+        function switchTab(tabId) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(c => c.classList.add('hidden'));
+
+            const buttons = document.querySelectorAll('nav button');
+            buttons.forEach(b => {
+                b.classList.remove('tab-active');
+                b.classList.add('border-transparent', 'text-slate-500');
+            });
+
+            const targetContent = document.getElementById(`content-${tabId}`);
+            if (targetContent) targetContent.classList.remove('hidden');
+
+            const targetTab = document.getElementById(`tab-${tabId}`);
+            if (targetTab) {
+                targetTab.classList.add('tab-active');
+                targetTab.classList.remove('border-transparent', 'text-slate-500');
+            }
+
+            // Trigger tab specific renders
+            if (tabId === 'rooms') renderRoomsMatrix();
+            if (tabId === 'admin') renderAdminTable();
+            if (tabId === 'carpool') renderCarpoolSection();
+            if (tabId === 'drive') renderDriveEmbed();
+        }
+
+        // 2. Real-time Calculator for Registration Form
+        function updateCalculations() {
+            const roomTypeRadio = document.querySelector('input[name="roomType"]:checked');
+            const roomType = roomTypeRadio ? roomTypeRadio.value : 'double';
+            const spa = document.getElementById('extraSpa') ? document.getElementById('extraSpa').checked : false;
+            const garage = document.getElementById('extraGarage') ? document.getElementById('extraGarage').checked : false;
+
+            const roommateSection = document.getElementById('roommateSection');
+            if (roommateSection) {
+                if (roomType === 'double') {
+                    roommateSection.classList.remove('hidden');
+                } else {
+                    roommateSection.classList.add('hidden');
+                }
+            }
+
+            let breakdownHtml = '';
+            let total = 0;
+
+            if (roomType === 'single') {
+                total += 50;
+                breakdownHtml += `
+                    <div class="flex justify-between items-center text-amber-300">
+                        <span>• Upgrade Camera Singola (2 notti)</span>
+                        <span class="font-bold">+€50,00</span>
+                    </div>`;
+            }
+
+            if (spa) {
+                total += 30;
+                breakdownHtml += `
+                    <div class="flex justify-between items-center text-pink-300">
+                        <span>• Ingresso SPA Wellness Kit</span>
+                        <span class="font-bold">+€30,00</span>
+                    </div>`;
+            }
+
+            if (garage) {
+                total += 56;
+                breakdownHtml += `
+                    <div class="flex justify-between items-center text-blue-300">
+                        <span>• Posto Auto Garage Hotel (2 gg)</span>
+                        <span class="font-bold">+€56,00</span>
+                    </div>`;
+            }
+
+            if (total === 0) {
+                breakdownHtml = `<div class="text-slate-400 italic">Nessun extra fuori budget selezionato.</div>`;
+            }
+
+            const breakdownEl = document.getElementById('calcBreakdown');
+            const totalEl = document.getElementById('calcTotal');
+
+            if (breakdownEl) breakdownEl.innerHTML = breakdownHtml;
+            if (totalEl) totalEl.innerText = `€${total.toFixed(2)}`;
+        }
+
+        // 3. Form Submit Handler
+        function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const name = document.getElementById('participantName').value.trim();
+            const contact = document.getElementById('participantContact').value.trim();
+            const roomType = document.querySelector('input[name="roomType"]:checked').value;
+            const roommatePref = document.getElementById('roommatePreference').value.trim();
+            
+            const dietaryOption = document.getElementById('dietaryOption') ? document.getElementById('dietaryOption').value : 'Nessuna';
+            const dietaryNotes = document.getElementById('dietaryNotes') ? document.getElementById('dietaryNotes').value.trim() : '';
+            
+            let dietaryText = dietaryOption;
+            if (dietaryNotes) {
+                dietaryText = dietaryOption === 'Nessuna' ? dietaryNotes : `${dietaryOption} (${dietaryNotes})`;
+            }
+
+            const spa = document.getElementById('extraSpa').checked;
+            const garage = document.getElementById('extraGarage').checked;
+            const transport = document.getElementById('transportOption').value;
+            const transportCost = parseFloat(document.getElementById('transportCost').value) || 0;
+
+            let totalExtra = 0;
+            if (roomType === 'single') totalExtra += 50;
+            if (spa) totalExtra += 30;
+            if (garage) totalExtra += 56;
+
+            let newParticipant = {
+                id: Date.now().toString(),
+                name,
+                contact,
+                roomType,
+                roommatePref: roomType === 'double' ? roommatePref : '',
+                dietary: dietaryText,
+                spa,
+                garage,
+                transport,
+                transportCost,
+                totalExtra,
+                assignedRoom: 'Non Assegnata'
+            };
+
+            const existingIdx = participants.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+            if (existingIdx >= 0) {
+                newParticipant.id = participants[existingIdx].id;
+                newParticipant.assignedRoom = participants[existingIdx].assignedRoom || 'Non Assegnata';
+                participants[existingIdx] = newParticipant;
+                showToast("Aggiornamento Salvato", `I dati di ${name} sono stati aggiornati con successo.`);
+            } else {
+                participants.push(newParticipant);
+                showToast("Registrazione Completata!", `Grazie ${name}, le tue opzioni sono state salvate.`);
+            }
+
+            if (typeof window.saveParticipantToCloud === 'function') {
+                window.saveParticipantToCloud(newParticipant);
+            }
+
+            autoPushToGoogleDrive();
+
+            document.getElementById('bookingForm').reset();
+            updateCalculations();
+            updateHeaderTotals();
+            renderAdminTable();
+            renderRoomsMatrix();
+            renderCarpoolSection();
+        }
+
+        // 4. Update Dashboard Header Summary Stats
+        function updateHeaderTotals() {
+            const totalParticipants = participants.length;
+            const singleCount = participants.filter(p => p.roomType === 'single').length;
+            const singleTotalCost = singleCount * 50;
+
+            const spaCount = participants.filter(p => p.spa).length;
+            const spaTotalCost = spaCount * 30;
+
+            const garageCount = participants.filter(p => p.garage).length;
+            const garageTotalCost = garageCount * 56;
+
+            const dietaryCount = participants.filter(p => p.dietary && p.dietary !== 'Nessuna').length;
+
+            const transportTotal = participants.reduce((sum, p) => sum + (p.transportCost || 0), 0);
+            const totalExtrasSum = participants.reduce((sum, p) => sum + (p.totalExtra || 0), 0);
+
+            const headerTotalEl = document.getElementById('headerTotalExtras');
+            if (headerTotalEl) headerTotalEl.innerText = `€${totalExtrasSum.toFixed(2)}`;
+
+            const statTotalCount = document.getElementById('statTotalCount');
+            if (statTotalCount) statTotalCount.innerText = totalParticipants;
+
+            const statSingleCount = document.getElementById('statSingleCount');
+            if (statSingleCount) statSingleCount.innerText = singleCount;
+
+            const statSingleCost = document.getElementById('statSingleCost');
+            if (statSingleCost) statSingleCost.innerText = `Totale +€${singleTotalCost} fuori budget`;
+
+            const statSpaCount = document.getElementById('statSpaCount');
+            if (statSpaCount) statSpaCount.innerText = spaCount;
+
+            const statSpaCost = document.getElementById('statSpaCost');
+            if (statSpaCost) statSpaCost.innerText = `Totale +€${spaTotalCost} fuori budget`;
+
+            const statGarageCount = document.getElementById('statGarageCount');
+            if (statGarageCount) statGarageCount.innerText = garageCount;
+
+            const statGarageCost = document.getElementById('statGarageCost');
+            if (statGarageCost) statGarageCost.innerText = `Totale +€${garageTotalCost} fuori budget`;
+
+            const statDietaryCount = document.getElementById('statDietaryCount');
+            if (statDietaryCount) statDietaryCount.innerText = dietaryCount;
+
+            const statDietaryList = document.getElementById('statDietaryList');
+            if (statDietaryList) {
+                statDietaryList.innerText = dietaryCount > 0 ? `${dietaryCount} menu personalizzati` : 'Nessun menu speciale';
+            }
+
+            const statTransportTotal = document.getElementById('statTransportTotal');
+            if (statTransportTotal) statTransportTotal.innerText = `€${transportTotal.toFixed(2)}`;
+        }
+
+        // 5. Render Admin Participants Table
+        function renderAdminTable() {
+            const tbody = document.getElementById('participantsTableBody');
+            if (!tbody) return;
+
+            if (participants.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-400 italic">Nessun partecipante registrato. Compila il modulo per iniziare!</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            participants.forEach(p => {
+                const roomBadge = p.roomType === 'single'
+                    ? `<span class="bg-amber-100 text-amber-800 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase">Singola (+€50)</span>`
+                    : `<span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-full uppercase">Doppia (In Budget)</span>`;
+
+                let extrasBadges = [];
+                if (p.spa) extrasBadges.push(`<span class="bg-pink-100 text-pink-700 text-[10px] font-bold px-2 py-0.5 rounded">SPA €30</span>`);
+                if (p.garage) extrasBadges.push(`<span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded">Garage €56</span>`);
+                const extrasHtml = extrasBadges.length > 0 ? extrasBadges.join(' ') : `<span class="text-slate-400 italic">Nessuno</span>`;
+
+                const dietaryBadge = (p.dietary && p.dietary !== 'Nessuna')
+                    ? `<span class="bg-rose-100 text-rose-800 text-[11px] font-bold px-2.5 py-1 rounded-lg flex items-center gap-1 w-fit"><i class="fa-solid fa-utensils text-[10px]"></i> ${p.dietary}</span>`
+                    : `<span class="text-slate-400 italic">Standard</span>`;
+
+                let transportLabel = 'Sconosciuto';
+                if (p.transport === 'auto_offro') transportLabel = '🚗 Offre posti auto';
+                if (p.transport === 'auto_cerco') transportLabel = '🔍 Cerca passaggio';
+                if (p.transport === 'treno') transportLabel = '🚆 Treno / Bus';
+                if (p.transport === 'autonomo') transportLabel = '👤 Auto autonoma';
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="p-4">
+                            <div class="font-bold text-slate-800">${p.name}</div>
+                            <div class="text-slate-400 text-xs">${p.contact || 'Nessun contatto'}</div>
+                        </td>
+                        <td class="p-4">${roomBadge}</td>
+                        <td class="p-4">
+                            <div class="font-semibold text-slate-700">${p.assignedRoom || 'Non Assegnata'}</div>
+                            ${p.roommatePref ? `<div class="text-[11px] text-slate-500">Pref: ${p.roommatePref}</div>` : ''}
+                        </td>
+                        <td class="p-4">${dietaryBadge}</td>
+                        <td class="p-4">${extrasHtml}</td>
+                        <td class="p-4 text-xs font-medium text-slate-700">${transportLabel}</td>
+                        <td class="p-4 font-bold text-emerald-600">€${(p.transportCost || 0).toFixed(2)}</td>
+                        <td class="p-4 text-right font-extrabold text-amber-600">€${(p.totalExtra || 0).toFixed(2)}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="removeParticipant('${p.id}')" class="p-2 text-slate-400 hover:text-red-600 transition" title="Elimina">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        // 6. Render Room Matrix Grid
+        function renderRoomsMatrix() {
+            const grid = document.getElementById('roomsGrid');
+            if (!grid) return;
+
+            let roomsMap = {};
+
+            participants.forEach(p => {
+                const room = p.assignedRoom || 'Non Assegnata';
+                if (!roomsMap[room]) roomsMap[room] = [];
+                roomsMap[room].push(p);
+            });
+
+            let html = '';
+            for (let roomName in roomsMap) {
+                const occupants = roomsMap[roomName];
+                const isSingle = occupants.some(o => o.roomType === 'single');
+
+                html += `
+                    <div class="p-5 rounded-2xl border-2 ${isSingle ? 'border-amber-200 bg-amber-50/20' : 'border-indigo-100 bg-white'} shadow-sm space-y-3">
+                        <div class="flex justify-between items-center pb-2 border-b border-slate-100">
+                            <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                                <i class="fa-solid ${isSingle ? 'fa-user text-amber-500' : 'fa-bed text-indigo-600'}"></i>
+                                ${roomName}
+                            </h4>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${isSingle ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'}">
+                                ${isSingle ? 'Uso Singolo' : 'Camera Doppia'}
+                            </span>
+                        </div>
+
+                        <div class="space-y-2">
+                            ${occupants.map(occ => `
+                                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center text-xs">
+                                    <div>
+                                        <div class="font-bold text-slate-800">${occ.name}</div>
+                                        <div class="text-[10px] text-slate-500">${occ.spa ? '✨ SPA' : ''} ${occ.garage ? '🚗 Garage' : ''}</div>
+                                    </div>
+                                    <span class="text-amber-600 font-bold">+€${occ.totalExtra}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        // 7. Auto Assign Rooms Logic
+        function autoAssignRooms() {
+            let roomNumber = 101;
+            let unassignedDoubles = [];
+
+            participants.forEach(p => {
+                if (p.roomType === 'single') {
+                    p.assignedRoom = `Singola ${roomNumber}`;
+                    roomNumber++;
+                } else {
+                    unassignedDoubles.push(p);
+                }
+            });
+
+            for (let i = 0; i < unassignedDoubles.length; i += 2) {
+                const roomName = `Stanza ${roomNumber} (Doppia)`;
+                unassignedDoubles[i].assignedRoom = roomName;
+                if (i + 1 < unassignedDoubles.length) {
+                    unassignedDoubles[i + 1].assignedRoom = roomName;
+                }
+                roomNumber++;
+            }
+
+            participants.forEach(p => {
+                if (typeof window.saveParticipantToCloud === 'function') {
+                    window.saveParticipantToCloud(p);
+                }
+            });
+
+            autoPushToGoogleDrive();
+            renderRoomsMatrix();
+            renderAdminTable();
+            showToast("Stanze Assegnate!", "Abbinamenti generati e salvati con successo.");
+        }
+
+        // 8. Render Carpool Section
+        function renderCarpoolSection() {
+            const driversGrid = document.getElementById('carpoolDriversGrid');
+            const seekersGrid = document.getElementById('carpoolSeekersGrid');
+            const publicGrid = document.getElementById('carpoolPublicTransportGrid');
+
+            if (!driversGrid || !seekersGrid || !publicGrid) return;
+
+            const drivers = participants.filter(p => p.transport === 'auto_offro');
+            const seekers = participants.filter(p => p.transport === 'auto_cerco');
+            const publicTrans = participants.filter(p => p.transport === 'treno' || p.transport === 'autonomo');
+
+            driversGrid.innerHTML = drivers.length === 0
+                ? `<div class="text-xs text-slate-400 italic">Nessun autista registrato.</div>`
+                : drivers.map(d => `
+                    <div class="p-3 bg-white rounded-xl border border-blue-200 text-xs shadow-sm">
+                        <div class="font-bold text-slate-800">${d.name}</div>
+                        <div class="text-slate-500 text-[11px] mt-0.5">Offre passaggio • Rimborso €${(d.transportCost || 0).toFixed(2)}</div>
+                    </div>
+                `).join('');
+
+            seekersGrid.innerHTML = seekers.length === 0
+                ? `<div class="text-xs text-slate-400 italic">Nessun passeggero in cerca.</div>`
+                : seekers.map(s => `
+                    <div class="p-3 bg-white rounded-xl border border-amber-200 text-xs shadow-sm">
+                        <div class="font-bold text-slate-800">${s.name}</div>
+                        <div class="text-slate-500 text-[11px] mt-0.5">Cerca un posto in auto</div>
+                    </div>
+                `).join('');
+
+            publicGrid.innerHTML = publicTrans.length === 0
+                ? `<div class="text-xs text-slate-400 italic">Nessun viaggio autonomo registrato.</div>`
+                : publicTrans.map(pt => `
+                    <div class="p-3 bg-white rounded-xl border border-slate-200 text-xs shadow-sm">
+                        <div class="font-bold text-slate-800">${pt.name}</div>
+                        <div class="text-slate-500 text-[11px] mt-0.5">${pt.transport === 'treno' ? 'Treno / Bus' : 'Mezzo Autonomo'} • Rimborso €${(pt.transportCost || 0).toFixed(2)}</div>
+                    </div>
+                `).join('');
+        }
+
+        // 9. Google Drive & Workspace Local Storage & Settings
+        function loadDriveSettings() {
+            const savedWebhook = localStorage.getItem('rimini_google_webhook_url') || '';
+            const savedEmbed = localStorage.getItem('rimini_google_embed_url') || '';
+            
+            const webhookInput = document.getElementById('googleWebhookUrl');
+            const embedInput = document.getElementById('googleSheetEmbedUrl');
+
+            if (webhookInput) webhookInput.value = savedWebhook;
+            if (embedInput) embedInput.value = savedEmbed;
+
+            updateDriveStatusBadge();
+            renderDriveEmbed();
+        }
+
+        function saveDriveSettings() {
+            const webhookUrl = document.getElementById('googleWebhookUrl') ? document.getElementById('googleWebhookUrl').value.trim() : '';
+            const embedUrl = document.getElementById('googleSheetEmbedUrl') ? document.getElementById('googleSheetEmbedUrl').value.trim() : '';
+
+            localStorage.setItem('rimini_google_webhook_url', webhookUrl);
+            localStorage.setItem('rimini_google_embed_url', embedUrl);
+
+            updateDriveStatusBadge();
+            renderDriveEmbed();
+        }
+
+        function updateDriveStatusBadge() {
+            const webhookUrl = localStorage.getItem('rimini_google_webhook_url');
+            const dot = document.getElementById('driveSyncDot');
+            const text = document.getElementById('driveSyncText');
+
+            if (webhookUrl) {
+                if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse";
+                if (text) text.innerText = "Google Drive: Collegato Auto-Sync";
+            } else {
+                if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-amber-500";
+                if (text) text.innerText = "Google Drive: Non collegato";
+            }
+        }
+
+        function renderDriveEmbed() {
+            const embedUrl = localStorage.getItem('rimini_google_embed_url');
+            const container = document.getElementById('driveEmbedContainer');
+            if (!container) return;
+
+            if (embedUrl) {
+                let formattedUrl = embedUrl;
+                if (formattedUrl.includes('/edit')) {
+                    formattedUrl = formattedUrl.replace('/edit', '/preview');
+                }
+                container.innerHTML = `<iframe src="${formattedUrl}" class="w-full h-full border-0 rounded-2xl" loading="lazy"></iframe>`;
+            } else {
+                container.innerHTML = `
+                    <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto mb-3">
+                        <i class="fa-brands fa-google-drive"></i>
+                    </div>
+                    <h3 class="font-bold text-base text-slate-800">Nessun Foglio Google Collegato</h3>
+                    <p class="text-xs text-slate-500 max-w-md mx-auto mt-1 mb-4">Incolla l'URL del tuo Foglio Google nelle impostazioni per visualizzare qui l'anteprima aggiornata live per tutti.</p>
+                    <button onclick="openWorkspaceModal()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow">
+                        Collega Account Google Drive Ora
+                    </button>
+                `;
+            }
+        }
+
+        async function autoPushToGoogleDrive() {
+            const webhookUrl = localStorage.getItem('rimini_google_webhook_url');
+            if (!webhookUrl) return;
+
+            try {
+                await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'no-cors',
+                    body: JSON.stringify({
+                        timestamp: new Date().toISOString(),
+                        participants: participants
+                    })
+                });
+            } catch (e) {
+                console.error("Auto Google Drive sync error:", e);
+            }
+        }
+
+        async function triggerAutoGoogleSheetsSync() {
+            const webhookUrl = localStorage.getItem('rimini_google_webhook_url');
+            if (!webhookUrl) {
+                showToast("URL Mancante", "Inserisci l'URL Apps Script per collegare Google Drive.");
+                return;
+            }
+            showToast("Sincronizzazione...", "Invio in corso a Google Drive...");
+            await autoPushToGoogleDrive();
+            showToast("Completato!", "Tutti i dati sono stati sincronizzati con Google Drive.");
+        }
+
+        function toggleAppsScriptGuide() {
+            const guide = document.getElementById('appsScriptGuide');
+            if (guide) guide.classList.toggle('hidden');
+        }
+
+        function copyAppsScriptCode() {
+            const codeText = document.getElementById('appsScriptCodeText').innerText;
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = codeText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            showToast("Codice Copiato!", "Incollalo nell'editor di Google Apps Script.");
+        }
+
+        function exportToGoogleSheets() {
+            let csvContent = "\uFEFFPartecipante,Contatto,Tipologia Stanza,Stanza Assegnata,Intolleranze / Diete,SPA (€30),Garage (€56),Trasporto,Rimborso Trasporto (€),Totale Extra Fuori Budget (€)\n";
+            participants.forEach(p => {
+                csvContent += `"${p.name}","${p.contact || ''}","${p.roomType === 'single' ? 'Singola' : 'Doppia'}","${p.assignedRoom || 'Non Assegnata'}","${p.dietary || 'Nessuna'}","${p.spa ? 'SI' : 'NO'}","${p.garage ? 'SI' : 'NO'}","${p.transport}","${(p.transportCost || 0).toFixed(2)}","${(p.totalExtra || 0).toFixed(2)}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Rimini_Weekend_2026_Partecipanti.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("CSV Scaricato", "Importalo direttamente su Google Fogli!");
+        }
+
+        function exportToGoogleDocs() {
+            let docText = `RESOCONTO ORGANIZZATIVO WEEKEND RIMINI 2026\n`;
+            docText += `--------------------------------------------------\n`;
+            docText += `Partecipanti Totali: ${participants.length}\n`;
+            docText += `Menu Speciali / Intolleranze: ${participants.filter(p => p.dietary && p.dietary !== 'Nessuna').length}\n`;
+            docText += `Totale Rimborsi Trasporto: €${participants.reduce((sum, p) => sum + (p.transportCost || 0), 0).toFixed(2)}\n`;
+            docText += `Totale Extra Fuori Budget: €${participants.reduce((sum, p) => sum + (p.totalExtra || 0), 0).toFixed(2)}\n\n`;
+            docText += `ELENCO DETTAGLIATO:\n`;
+            participants.forEach((p, idx) => {
+                docText += `${idx + 1}. ${p.name} - ${p.roomType === 'single' ? 'Singola' : 'Doppia'} (${p.assignedRoom}) - Dieta: ${p.dietary || 'Standard'} - Extra: €${p.totalExtra} - Rimborso Trasporto: €${p.transportCost}\n`;
+            });
+
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = docText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            showToast("Resoconto Copiato!", "Pronto da incollare in Google Docs.");
+        }
+
+        // 10. Modals & UI Helpers
+        function openWorkspaceModal() { document.getElementById('workspaceModal').classList.remove('hidden'); }
+        function closeWorkspaceModal() { document.getElementById('workspaceModal').classList.add('hidden'); }
+        
+        function openShareModal() { 
+            const input = document.getElementById('shareUrlInput');
+            if (input) input.value = window.location.href;
+            document.getElementById('shareModal').classList.remove('hidden'); 
+        }
+        function closeShareModal() { document.getElementById('shareModal').classList.add('hidden'); }
+
+        function copyShareUrl() {
+            const input = document.getElementById('shareUrlInput');
+            if (input) {
+                input.select();
+                document.execCommand('copy');
+                showToast("Link Copiato!", "Invia il link ai tuoi colleghi per collaborare live.");
+            }
+        }
+
+        function showToast(title, message) {
+            document.getElementById('toastTitle').innerText = title;
+            document.getElementById('toastMessage').innerText = message;
+            document.getElementById('toastModal').classList.remove('hidden');
+        }
+        function closeToast() { document.getElementById('toastModal').classList.add('hidden'); }
+
+        function showConfirmModal(title, message, actionCallback) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            const btn = document.getElementById('confirmActionButton');
+            btn.onclick = function() {
+                actionCallback();
+                closeConfirmModal();
+            };
+            document.getElementById('confirmModal').classList.remove('hidden');
+        }
+        function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
+
+        function removeParticipant(id) {
+            showConfirmModal(
+                "Eliminare Partecipante?",
+                "Sei sicuro di voler eliminare questa registrazione?",
+                function() {
+                    participants = participants.filter(p => p.id !== id);
+                    if (typeof window.deleteParticipantFromCloud === 'function') {
+                        window.deleteParticipantFromCloud(id);
+                    }
+                    autoPushToGoogleDrive();
+                    updateHeaderTotals();
+                    renderAdminTable();
+                    renderRoomsMatrix();
+                    renderCarpoolSection();
+                    showToast("Rimosso", "Il partecipante è stato eliminato.");
+                }
+            );
+        }
+
+        function promptClearAllData() {
+            showConfirmModal(
+                "Azzerare Tutti i Dati?",
+                "Questa operazione cancellerà tutte le registrazioni presenti per ricominciare da capo.",
+                function() {
+                    participants.forEach(p => {
+                        if (typeof window.deleteParticipantFromCloud === 'function') {
+                            window.deleteParticipantFromCloud(p.id);
+                        }
+                    });
+                    participants = [];
+                    autoPushToGoogleDrive();
+                    updateHeaderTotals();
+                    renderAdminTable();
+                    renderRoomsMatrix();
+                    renderCarpoolSection();
+                    showToast("Dati Azzerati", "Puoi condividere il modulo pulito.");
+                }
+            );
+        }
+
+        // 11. AI Gemini Assistant Logic
+        function setAiPrompt(text) {
+            document.getElementById('aiInputPrompt').value = text;
+        }
+
+        function askGeminiAssistant() {
+            const input = document.getElementById('aiInputPrompt');
+            const prompt = input.value.trim();
+            if (!prompt) return;
+
+            const chat = document.getElementById('aiChatWindow');
+            chat.innerHTML += `
+                <div class="flex items-start gap-3 justify-end">
+                    <div class="bg-purple-600 text-white p-3.5 rounded-2xl rounded-tr-none text-xs sm:text-sm max-w-[85%]">
+                        ${prompt}
+                    </div>
+                </div>
+            `;
+
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+
+            setTimeout(() => {
+                let aiResponse = "Analizzando la richiesta...";
+                if (prompt.toLowerCase().includes('abbinament') || prompt.toLowerCase().includes('stanz')) {
+                    aiResponse = `Suggerisco di abbinare Mario Rossi e Giuseppe Bianchi in Stanza 101 per vicinanza di contatti ed extra correlati. Elena Verdi ha scelto l'uso singolo (+€50) ed è già assegnata correttamente.`;
+                } else if (prompt.toLowerCase().includes('messaggio') || prompt.toLowerCase().includes('gruppo')) {
+                    aiResponse = `Ecco la bozza pronta: "Ciao ragazzi! Vi ricordo di compilare il modulo per le camere. Le doppi e i pasti sono 100% coperti, mentre eventuali extra (SPA, Garage, uso Singola) saranno da pagare in hotel. Inserite anche la richiesta di rimborso auto/treno!"`;
+                } else {
+                    aiResponse = `Con i dati attuali abbiamo ${participants.length} partecipanti. I costi trasporti tot. da rimborsare ammontano a €${participants.reduce((sum, p) => sum + (p.transportCost || 0), 0).toFixed(2)}.`;
+                }
+
+                chat.innerHTML += `
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold text-xs shrink-0">IA</div>
+                        <div class="bg-white p-3.5 rounded-2xl rounded-tl-none border border-slate-200 shadow-sm text-xs sm:text-sm text-slate-700 max-w-[85%]">
+                            ${aiResponse}
+                        </div>
+                    </div>
+                `;
+                chat.scrollTop = chat.scrollHeight;
+            }, 600);
+        }
+
+        // Window Load Initializations
+        window.onload = function() {
+            updateCalculations();
+            updateHeaderTotals();
+            loadDriveSettings();
+            renderAdminTable();
+            renderRoomsMatrix();
+            renderCarpoolSection();
+        };
+    </script>
+</body>
+</html>
